@@ -35,21 +35,21 @@ curl https://example.com/api/profile \
 From the root of <https://sso-dev.therootcompany.com> \
 (also <https://therootcompany.github.io/sso-dev/>)
 
-```text
+<pre><code>
 .
-├── key.ec.jwk.json
-├── key.rsa.jwk.json
+├── <a href="./key.ec.jwk.json">key.ec.jwk.json</a>
+├── <a href="./key.rsa.jwk.json">key.rsa.jwk.json</a>
 ├── .well-known/
-│   ├── jwks.json
-│   └── openid-configuration
+│   ├── <a href="./.well-known/jwks.json">jwks.json</a>
+│   └── <a href="./.well-known/openid-configuration">openid-configuration</a>
 │
 ├── staging/
-│   ├── key.ec.jwk.json
-│   ├── key.rsa.jwk.json
+│   ├── <a href="./staging/key.ec.jwk.json">key.ec.jwk.json</a>
+│   ├── <a href="./staging/key.rsa.jwk.json">key.rsa.jwk.json</a>
 │   │
 │   └── .well-known/
-│       ├── jwks.json
-│       └── openid-configuration
+│       ├── <a href="./staging/.well-known/jwks.json">jwks.json</a>
+│       └── <a href="./staging/.well-known/openid-configuration">openid-configuration</a>
 │
 ├── dev/
 │   └── .well-known/
@@ -63,7 +63,7 @@ From the root of <https://sso-dev.therootcompany.com> \
     └── .well-known/
         ├── jwks.json
         └── openid-configuration
-```
+</code></pre>
 
 # Make it Yours
 
