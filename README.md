@@ -1,4 +1,6 @@
-# Static OIDC Issuer
+# [Static OIDC Issuer](https://github.com/therootcompany/sso-dev/)
+
+<small><a href="https://github.com/therootcompany/sso-dev/">github.com/therootcompany/sso-dev</a></small>
 
 A real, working OpenID Connect Configuration for Development \
 (host statically on GitHub Pages, or wherever)
