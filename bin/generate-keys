@@ -1,0 +1,130 @@
+#!/bin/sh
+set -e
+set -u
+
+fn_gen() { (
+    while true; do
+        keypairs gen -key ./key.tmp.jwk.json -pub ./pub.tmp.jwk.json
+        if grep -q '"RSA"' ./key.tmp.jwk.json; then
+            mv ./key.tmp.jwk.json ./key.rsa.jwk.json
+            mv ./pub.tmp.jwk.json ./pub.rsa.jwk.json
+            break
+        fi
+    done
+
+    while true; do
+        keypairs gen -key ./key.tmp.jwk.json -pub ./pub.tmp.jwk.json
+        if grep -q '"EC' ./key.tmp.jwk.json; then
+            mv ./key.tmp.jwk.json ./key.ec.jwk.json
+            mv ./pub.tmp.jwk.json ./pub.ec.jwk.json
+            break
+        fi
+    done
+
+    mkdir -p ./.well-known/
+    fn_jwks \
+        ./.well-known/jwks.json \
+        ./pub.rsa.jwk.json \
+        ./pub.ec.jwk.json
+    fn_prettify ./.well-known/jwks.json
+    ln -sf .well-known/jwks.json .
+); }
+
+fn_jwks() { (
+    my_json="${1}"
+    my_key1="$(
+        cat "${2}"
+    )"
+    my_key2="$(
+        cat "${3}"
+    )"
+    echo "{ \"keys\": [ ${my_key1}, ${my_key2} ] }" > "${my_json}"
+); }
+
+fn_prettify() { (
+    my_file="${1}"
+    if command -v prettier > /dev/null; then
+        prettier -w "${my_file}" > /dev/null
+    fi
+); }
+
+fn_conf() { (
+    my_url="${1:-}"
+
+    {
+        echo '{'
+        echo '  "issuer": "'"${my_url}"'/",'
+        echo '  "jwks_uri": "'"${my_url}"'/.well-known/jwks.json",'
+        echo '  "id_token_signing_alg_values_supported": ['
+        echo '    "RS256"'
+        echo '  ]'
+        echo '}'
+    } > .well-known/openid-configuration
+); }
+
+main() { (
+    my_issuer="${1:-}"
+    if test -z "${my_issuer}"; then
+        echo ""
+        echo "USAGE"
+        echo "    generate-keys <issuer_url_no_trailing_slash>"
+        echo ""
+        echo "EXAMPLE"
+        echo "    generate-keys https://sso-dev.therootcompany.com"
+        echo "    generate-keys https://therootcompany.github.com/sso-dev"
+        echo ""
+        return 1
+    fi
+
+    fn_gen
+    fn_conf "${my_issuer}"
+
+    (
+        mkdir -p ./dev/
+        cp -RPp ./.well-known ./jwks.json ./dev/
+        cd ./dev/ || return 1
+        fn_conf "${my_issuer}/dev"
+    )
+
+    (
+        mkdir -p ./staging/
+        cd ./staging/ || return 1
+        fn_gen
+        fn_conf "${my_issuer}/staging"
+    )
+
+    (
+        mkdir -p ./ec/.well-known/
+        cd ./ec/ || return 1
+
+        fn_jwks \
+            ./.well-known/jwks.json \
+            ../pub.ec.jwk.json \
+            ../staging/pub.ec.jwk.json
+
+        ln -sf .well-known/jwks.json ./
+        fn_prettify .well-known/jwks.json
+
+        fn_conf "${my_issuer}/ec"
+    )
+
+    (
+        mkdir -p ./rsa/.well-known/
+        cd ./rsa/ || return 1
+
+        fn_jwks \
+            ./.well-known/jwks.json \
+            ../pub.rsa.jwk.json \
+            ../staging/pub.rsa.jwk.json
+
+        ln -sf .well-known/jwks.json ./
+        fn_prettify .well-known/jwks.json
+
+        fn_conf "${my_issuer}/rsa"
+    )
+
+    #rm ./pub.*.jwk.json
+    #rm ./staging/pub.*.jwk.json
+); }
+
+main "${@:-}"
